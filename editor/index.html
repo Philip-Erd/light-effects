@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Light Effect Editor</title>
+
+  <style>
+    #sliderContainer {
+      display: flex;
+      gap: 0px;
+      align-items: flex-end;
+      margin-bottom: 20px;
+      font-size: small;
+    }
+
+    .slider-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .slider-wrapper input[type="range"] {
+      writing-mode: vertical-lr;
+      direction: rtl;
+      width: 25px;
+      height: 200px;
+    }
+
+
+    textarea {
+      width: 100%;
+      height: 100px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div>
+    <label>number of sliders: </label>
+    <input type="number" id="sliderCount" value="5" min="1">
+    <button onclick="createSliders()">create</button>
+  </div>
+
+  <div id="sliderContainer"></div>
+
+
+
+  <div>
+    <label>loop start index</label>
+    <input type="number" id="loop_start" value="0">
+  </div>
+
+  <div>
+    <label>loop end index</label>
+    <input type="number" id="loop_end" value="0">
+  </div>
+
+  <button onclick="to_json()">to JSON</button>
+
+
+  <h3>JSON</h3>
+  <textarea id="jsonOutput"></textarea>
+
+  <button onclick="from_json()">from JSON</button>
+
+
+  <script>
+
+
+    function from_json() {
+      effect = JSON.parse(document.getElementById("jsonOutput").value);
+
+      document.getElementById("loop_start").value = effect.loop_start;
+      document.getElementById("loop_end").value = effect.loop_end;
+
+      createSliders(effect.values)
+    }
+
+    function createSliders(values = null) {
+      const container = document.getElementById("sliderContainer");
+      let count = parseInt(document.getElementById("sliderCount").value);
+
+      container.innerHTML = "";
+
+      if (values != null) {
+        count = values.length;
+      }
+
+      for (let i = 0; i < count; i++) {
+
+        const wrapper = document.createElement("div");
+        wrapper.className = "slider-wrapper";
+
+        const slider = document.createElement("input");
+        slider.type = "range";
+        slider.min = 0;
+        slider.max = 100;
+        slider.value = 0;
+
+        if (values != null) {
+          slider.value = values[i] * 100;
+        }
+
+
+
+        const label_value = document.createElement("div");
+        label_value.className = "value-label";
+        label_value.textContent = slider.value / 100;
+
+        slider.addEventListener("input", () => {
+          label_value.textContent = slider.value / 100;
+        });
+
+        slider.addEventListener("wheel", function (e) {
+          if (e.deltaY < 0) {
+            slider.valueAsNumber += 1;
+          } else {
+            slider.value -= 1;
+          }
+          label_value.textContent = slider.value / 100;
+          e.preventDefault();
+          e.stopPropagation();
+        })
+
+        const label_index = document.createElement("div");
+        label_index.textContent = i;
+
+        wrapper.appendChild(slider);
+        wrapper.appendChild(label_value);
+        wrapper.appendChild(label_index);
+        container.appendChild(wrapper);
+      }
+
+    }
+
+    function to_json() {
+      const sliders = document.querySelectorAll("#sliderContainer input[type='range']");
+      const values = [];
+
+      sliders.forEach(slider => {
+        values.push(slider.value / 100);
+      });
+
+      let output = {};
+      output.values = values;
+      output.loop_start = document.getElementById("loop_start").value;
+      output.loop_end = document.getElementById("loop_end").value;
+
+      const json_string = JSON.stringify(output)
+
+      document.getElementById("jsonOutput").value = json_string;
+
+      document.getElementById("jsonOutput").select();
+      document.execCommand("copy");
+
+    }
+
+    createSliders();
+
+  </script>
+
+</body>
+
+</html>
